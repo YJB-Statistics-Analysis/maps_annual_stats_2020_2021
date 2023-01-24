@@ -13,3 +13,4 @@ The dashboards are found in output.html and the code to produce them in scripts.
 
 To install the packages used in this project run the file renv/activate.R
 
+The dashboards are also available on the [YJB Rpubs website](https://rpubs.com/yjb_statistics). 
