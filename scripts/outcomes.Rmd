@@ -1,0 +1,172 @@
+---
+title: "Local level mapping tool - Children cautioned and court sentenced"
+output: 
+  flexdashboard::flex_dashboard:
+logo: '../images/YJB_logo.jpeg'
+orientation: rows
+css: '../www/style.css'
+vertical_layout: fill
+---
+
+
+```{r source_files,echo=FALSE, message=FALSE,warning=FALSE,results='hide'}
+source('packages.R')
+source('functions.R')
+source('colours_yjb.R')
+```
+
+```{r data, echo=FALSE, message=FALSE,warning=FALSE,results='hide'}
+df <- read_excel("../data/YJ_Stats_Outcomes_Data_2020_21.xlsx", sheet = "Data")
+df<- df[order(df$Region, df$YOT),]
+df$Region_Rate <- round(df$Region_Rate, 1)
+df$YOT_Rate <- round(df$YOT_Rate, 1)
+
+shp<-st_read("../data/Shape/Counties_April_2019_EW_BUC/Counties_and_Unitary_Authorities__April_2019__Boundaries_EW_BUC.shp")
+shp<-merge(shp, df,by.x='CTYUA19CD',by.y='Code',all.x=TRUE)
+```
+
+```{r constants}
+tmap::tmap_mode(mode = c("view"))
+
+color_palette = 'Blues'
+source('colours_yjb.R')
+colour_distribution = YJB_6
+
+```
+
+Region level {data-orientation=columns}
+=====================================  
+
+
+
+```{r,echo=FALSE, message=FALSE,warning=FALSE,results='hide'}
+```
+
+Column {data-width=900}
+-------------------------------------
+
+
+### <B>England and Wales</B>
+
+<B>Cautions and court sentences given to children (per 1,000) of general 10-17 population, from 1st of April 2020 to 31st March 2021.</B>
+
+<sup>Source: Bespoke analysis of the Youth Justice Application Framework (YJAF). Population is based on the 2020 mid-year population estimates (ONS) for 10-17 years old.</sup>
+
+
+<p style="font-size: 11px">Note: Click on any region displays the actual value</p>
+
+
+```{r,map_region ,echo=FALSE, message=FALSE, warning=FALSE, results = 'hide'}
+
+
+# Region
+## Note: the column name is a blank space (' ') because tmap joins names and the value without leaving a space. I tried different solutions (changing the size of the bubble, fonts - nothing delivers an acceptable result).
+R_shp<-shp %>% 
+  dplyr::group_by(Region) %>% 
+  dplyr::summarize(' ' = mean(Region_Rate))
+
+
+map_region = tm_shape(R_shp, show.messages = FALSE) +
+  tmap_options(check.and.fix = TRUE) +
+  tm_polygons(col = ' ' , title = "Rate ", style = "cont", palette = color_palette, contrast = 1)+
+  tm_layout(frame = FALSE,
+            legend.outside.position = "bottom",
+            legend.outside.size = 0.35,
+            legend.outside = TRUE)+
+  tm_view(set.zoom.limits = c(6, 22))
+
+
+
+
+```
+
+
+```{r,echo=FALSE, message=FALSE,warning=FALSE}
+# This avoids tmap showing information about the geography
+map_region
+```
+
+
+
+```{r,echo=FALSE, message=FALSE,warning=FALSE,results='hide'}
+```
+
+Column {data-width=500, .tabset}
+-------------------------------------
+### <B>Table</B>
+```{r,echo=FALSE, message=FALSE,warning=FALSE}
+
+#Children Region table
+df_region <- df[!duplicated(df$Region),]
+table_data <- subset(df_region, select = c(Region,Region_Number,Region_Pop,Region_Rate))
+table_data %>%
+  reactable( style=list(fontSize="12px"),sortable = TRUE,minRows= 10,defaultPageSize = 160,compact=TRUE,
+             columns = list(
+               Region= colDef(width = 100,filterable = TRUE),
+               Region_Number= colDef(name="Number of cautions or sentences",width = 100,format = colFormat(separators = TRUE)),
+               Region_Pop= colDef(name="Population",width = 100,format = colFormat(separators = TRUE)),
+               Region_Rate= colDef(name="Rate per 1,000",width = 80,format = colFormat(separators = TRUE, digits = 1))
+             ),striped = TRUE, highlight = TRUE)
+
+```
+
+
+
+YOT level {data-orientation=columns}
+=====================================  
+
+Column {data-width=900}
+-------------------------------------
+
+### <B>England and Wales</B>
+
+
+<B>Cautions and court sentences given to children (per 1,000) of general 10-17 population, from 1st of April 2020 to 31st March 2021.</B>
+
+<sup>Source: Bespoke analysis of the Youth Justice Application Framework (YJAF). Population is based on the 2020 mid-year population estimates (ONS) for 10-17 years old.</sup>
+
+<p style="font-size: 11px">Note: Click on any region displays the actual value</p>
+
+```{r,map_yot, echo=FALSE, message=FALSE,warning=FALSE}
+# Region YOT
+## Note: the column name is a blank space (' ') because tmap joins names and the value without leaving a space. I tried different solutions (changing the size of the bubble, fonts - nothing delivers an acceptable result).
+Y_shp<-shp %>% 
+  dplyr::group_by(YOT) %>% 
+  dplyr::summarize(' '  = mean(YOT_Rate))
+
+
+map_yot = tm_shape(Y_shp, show.messages = FALSE) +
+  tmap_options(check.and.fix = TRUE)+
+  tm_polygons(col = ' ' , title = "Rate ", style = "cont", palette = color_palette, contrast = 1)+
+  tm_layout(frame = FALSE,
+            legend.outside.position = "bottom",
+            legend.outside.size = 0.35,
+            legend.outside = TRUE)+
+  tm_view(set.zoom.limits = c(6, 22))
+
+
+```
+
+```{r}
+map_yot
+```
+
+
+Column {data-width=500, .tabset}
+-------------------------------------
+### <B>Table</B>
+```{r, table, echo=FALSE, message=FALSE,warning=FALSE}
+#Children YOT table
+df_yot <- df[!duplicated(df$YOT),]
+table_data <- subset(df_yot,select = c(Region,YOT,YOT_Number,YOT_Pop,YOT_Rate))
+table_data %>%
+  reactable(style=list(fontSize="12px"),sortable = TRUE,minRows= 154,defaultPageSize = 160,compact=TRUE,
+             columns = list(
+               Region= colDef(width = 100,filterable = TRUE),
+               YOT= colDef(name="Youth Justice Service",width = 140,filterable = TRUE),
+               YOT_Number= colDef(name="Number of cautions or sentences",width = 80,format = colFormat(separators = TRUE)),
+               YOT_Pop= colDef(name="Population",width = 80,format = colFormat(separators = TRUE)),
+               YOT_Rate= colDef(name="Rate per 1,000",width = 70,format = colFormat(separators = TRUE, digits = 1))
+             ),striped = TRUE, highlight = TRUE)
+```
+
