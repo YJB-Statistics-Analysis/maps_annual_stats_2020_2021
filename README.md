@@ -13,9 +13,9 @@ To clone this repo:
 
 To install the packages used in this project run the file renv/activate.R
 
-<<<<<<< HEAD
+
 The dashboards are also available on the [YJB Rpubs website](https://rpubs.com/yjb_statistics). 
-=======
+
 # To re-create/update the dashboards
 
 Dashboards are created using the Rmd files in scripts: ```children.Rmd```, ```offences.Rmd``` and ```outcomes.Rmd```. Running these files will create a copy of the dashboards in the scripts folder.
